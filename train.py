@@ -2,6 +2,7 @@
 Retrain the YOLO model for your own dataset.
 """
 
+import argparse
 import numpy as np
 import keras.backend as K
 from keras.layers import Input, Lambda
@@ -13,24 +14,34 @@ from yolo3.model import preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_l
 from yolo3.utils import get_random_data
 
 
-def _main():
-    annotation_path = 'train.txt'
-    log_dir = 'logs/000/'
-    classes_path = 'model_data/voc_classes.txt'
-    anchors_path = 'model_data/yolo_anchors.txt'
+def _main(train_path,
+          log_dir,
+          classes_path,
+          anchors_path,
+          weights_path,
+          batch_size,
+          epochs,
+          image_width,
+          image_height,
+          train_with_frozen=True,
+          train_with_unfrozen=False):
+    annotation_path = train_path
+    log_dir = log_dir
+    classes_path = classes_path
+    anchors_path = anchors_path
     class_names = get_classes(classes_path)
     num_classes = len(class_names)
     anchors = get_anchors(anchors_path)
 
-    input_shape = (416,416) # multiple of 32, hw
+    input_shape = (image_width, image_height)   # multiple of 32, hw
 
-    is_tiny_version = len(anchors)==6 # default setting
+    is_tiny_version = len(anchors) == 6     # default setting
     if is_tiny_version:
         model = create_tiny_model(input_shape, anchors, num_classes,
-            freeze_body=2, weights_path='model_data/tiny_yolo_weights.h5')
+                                  freeze_body=2, weights_path=weights_path)
     else:
         model = create_model(input_shape, anchors, num_classes,
-            freeze_body=2, weights_path='model_data/yolo_weights.h5') # make sure you know what you freeze
+                             freeze_body=2, weights_path=weights_path)   # make sure you know what you freeze
 
     logging = TensorBoard(log_dir=log_dir)
     checkpoint = ModelCheckpoint(log_dir + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
@@ -49,38 +60,38 @@ def _main():
 
     # Train with frozen layers first, to get a stable loss.
     # Adjust num epochs to your dataset. This step is enough to obtain a not bad model.
-    if True:
+    if train_with_frozen:
         model.compile(optimizer=Adam(lr=1e-3), loss={
             # use custom yolo_loss Lambda layer.
             'yolo_loss': lambda y_true, y_pred: y_pred})
 
-        batch_size = 32
+        batch_size = batch_size
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size))
         model.fit_generator(data_generator_wrapper(lines[:num_train], batch_size, input_shape, anchors, num_classes),
                 steps_per_epoch=max(1, num_train//batch_size),
                 validation_data=data_generator_wrapper(lines[num_train:], batch_size, input_shape, anchors, num_classes),
                 validation_steps=max(1, num_val//batch_size),
-                epochs=50,
+                epochs=epochs,
                 initial_epoch=0,
                 callbacks=[logging, checkpoint])
         model.save_weights(log_dir + 'trained_weights_stage_1.h5')
 
     # Unfreeze and continue training, to fine-tune.
     # Train longer if the result is not good.
-    if True:
+    if train_with_unfrozen:
         for i in range(len(model.layers)):
             model.layers[i].trainable = True
         model.compile(optimizer=Adam(lr=1e-4), loss={'yolo_loss': lambda y_true, y_pred: y_pred}) # recompile to apply the change
         print('Unfreeze all of the layers.')
 
-        batch_size = 32 # note that more GPU memory is required after unfreezing the body
+        batch_size = batch_size  # note that more GPU memory is required after unfreezing the body
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size))
         model.fit_generator(data_generator_wrapper(lines[:num_train], batch_size, input_shape, anchors, num_classes),
             steps_per_epoch=max(1, num_train//batch_size),
             validation_data=data_generator_wrapper(lines[num_train:], batch_size, input_shape, anchors, num_classes),
             validation_steps=max(1, num_val//batch_size),
-            epochs=100,
-            initial_epoch=50,
+            epochs=epochs * 2,
+            initial_epoch=epochs,
             callbacks=[logging, checkpoint, reduce_lr, early_stopping])
         model.save_weights(log_dir + 'trained_weights_final.h5')
 
@@ -187,4 +198,18 @@ def data_generator_wrapper(annotation_lines, batch_size, input_shape, anchors, n
     return data_generator(annotation_lines, batch_size, input_shape, anchors, num_classes)
 
 if __name__ == '__main__':
-    _main()
+    # We parse arguments
+    parser = argparse.ArgumentParser(description='Train Keras YOLOv3')
+    parser.add_argument('train_path', nargs=1, type=str, help='Path to the train file that contains images and objects to detect')
+    parser.add_argument('log_dir', nargs=1, type=str, help='Directory where the model and trained weights will be stored')
+    parser.add_argument('classes_path', type=str, nargs=1, help='Path to file that contains the classes of objects to detect')
+    parser.add_argument('weights_path', nargs=1, type=str, help='Path to file where trained weights are found')
+    parser.add_argument('batch_size', nargs=1, type=int, help='Batch size to use for training')
+    parser.add_argument('epochs', nargs=1, type=int, help='The number of epochs to train for')
+    parser.add_argument('image_width', nargs=1, type=int, help='Width of images')
+    parser.add_argument('image_height', nargs=1, type=int, help='Height of images')
+    parser.add_argument('train_with_frozen', action='store_true', help='Whether to freeze first pretrained layers')
+    parser.add_argument('train_with_unfrozen', action='store_true', help='Whether to continue training with unfrozen layers for fine tuning')
+
+    args = parser.parse_args()
+    _main(*args)
