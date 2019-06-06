@@ -203,6 +203,7 @@ if __name__ == '__main__':
     parser.add_argument('train_path', nargs=1, type=str, help='Path to the train file that contains images and objects to detect')
     parser.add_argument('log_dir', nargs=1, type=str, help='Directory where the model and trained weights will be stored')
     parser.add_argument('classes_path', type=str, nargs=1, help='Path to file that contains the classes of objects to detect')
+    parser.add_argument('anchors_path', type=str, nargs=1, help='Path to file that contains the anchors to be used')
     parser.add_argument('weights_path', nargs=1, type=str, help='Path to file where trained weights are found')
     parser.add_argument('batch_size', nargs=1, type=int, help='Batch size to use for training')
     parser.add_argument('epochs', nargs=1, type=int, help='The number of epochs to train for')
