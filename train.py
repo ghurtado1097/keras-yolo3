@@ -199,7 +199,7 @@ def data_generator_wrapper(annotation_lines, batch_size, input_shape, anchors, n
 
 if __name__ == '__main__':
     # We parse arguments
-    parser = argparse.ArgumentParser(description='Train Keras YOLOv3')
+    parser = argparse.ArgumentParser(prog='train.py', description='Train Keras YOLOv3')
     parser.add_argument('train_path', nargs=1, type=str, help='Path to the train file that contains images and objects to detect')
     parser.add_argument('log_dir', nargs=1, type=str, help='Directory where the model and trained weights will be stored')
     parser.add_argument('classes_path', type=str, nargs=1, help='Path to file that contains the classes of objects to detect')
