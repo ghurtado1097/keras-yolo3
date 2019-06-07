@@ -28,7 +28,6 @@ def _main(train_path,
     annotation_path = train_path
     log_dir = log_dir
     classes_path = classes_path
-    anchors_path = anchors_path
     class_names = get_classes(classes_path)
     num_classes = len(class_names)
     anchors = get_anchors(anchors_path)
