@@ -96,6 +96,8 @@ def _main(train_path,
 
     # Further training if needed.
 
+    return model
+
 
 def get_classes(classes_path):
     '''loads the classes'''
