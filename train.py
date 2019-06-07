@@ -212,5 +212,5 @@ if __name__ == '__main__':
     parser.add_argument('--train_with_frozen', action='store_true', help='Whether to freeze first pretrained layers')
     parser.add_argument('--train_with_unfrozen', action='store_true', help='Whether to continue training with unfrozen layers for fine tuning')
 
-    args = list(parser.parse_args().vars().values())
+    args = list(vars(parser.parse_args()).values())
     _main(*args)
