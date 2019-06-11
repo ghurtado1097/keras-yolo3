@@ -98,8 +98,8 @@ class YOLO_Kmeans:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='kmeans.py', description='Construction of anchors given images')
 
-    parser.add_argument('--cluster_number', type=int, help='Number of clusters to create')
-    parser.add_argument('--filename', type=str, help='Filename from where to read the images')
+    parser.add_argument('cluster_number', type=int, help='Number of clusters to create')
+    parser.add_argument('filename', type=str, help='Filename from where to read the images')
 
     args = parser.parse_args()
 
