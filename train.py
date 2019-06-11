@@ -16,13 +16,13 @@ from yolo3.utils import get_random_data
 
 def _main(train_path,
           log_dir,
-          classes_path,
-          anchors_path,
           weights_path,
-          batch_size,
-          epochs,
-          image_width,
-          image_height,
+          classes_path,
+          anchors_path='model_data/yolo_anchors.txt',
+          batch_size=32,
+          epochs=100,
+          image_width=416,
+          image_height=416,
           train_with_frozen=True,
           train_with_unfrozen=False):
     annotation_path = train_path
