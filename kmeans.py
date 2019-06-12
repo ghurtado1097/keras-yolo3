@@ -73,7 +73,7 @@ class YOLO_Kmeans:
         f = open(self.filename, 'r')
         dataSet = []
         for line in f:
-            infos = line.split(" ")
+            infos = line.split(" ")[1:]
             length = len(infos)
             for i in range(1, length):
                 width = int(infos[i].split(",")[2]) - \
